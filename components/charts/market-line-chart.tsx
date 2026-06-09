@@ -43,6 +43,8 @@ export function MarketLineChart({ data }: { data: HistoricalPoint[] }) {
             <span className={stats.change >= 0 ? "text-sm text-emerald-300" : "text-sm text-rose-300"}>{formatPercent(stats.changePercent)}</span>
           </div>
           <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-400">
+            <span>Range <b className="font-medium text-cyan-200">{selectedRange}</b></span>
+            <span>Candles <b className="font-medium text-slate-200">{candles.length}</b></span>
             <span>O <b className="font-medium text-slate-200">{stats.open.toFixed(2)}</b></span>
             <span>H <b className="font-medium text-emerald-300">{stats.high.toFixed(2)}</b></span>
             <span>L <b className="font-medium text-rose-300">{stats.low.toFixed(2)}</b></span>

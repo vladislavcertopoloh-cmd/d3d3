@@ -1,11 +1,11 @@
 import type { ChartRange, HistoricalPoint } from "@/types/market";
 
 const pointCountByRange: Record<ChartRange, number | undefined> = {
-  "1H": 32,
-  "24H": 56,
-  "7D": 84,
-  "1M": 120,
-  "6M": 220,
+  "1H": 18,
+  "24H": 48,
+  "7D": 112,
+  "1M": 180,
+  "6M": 300,
   "1Y": undefined
 };
 
