@@ -1,18 +1,27 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { getCandleBucketSize, selectHistoryForRange } from "@/lib/utils/chart-range";
 import { latestCandleStats } from "@/lib/utils/chart-stats";
 import { buildCandlesFromHistory } from "@/lib/utils/candles";
 import { formatPercent } from "@/lib/utils/format";
-import type { ChartRange, HistoricalPoint } from "@/types/market";
+import type { ApiStatus, ChartRange, HistoricalPoint } from "@/types/market";
 
 const ranges: ChartRange[] = ["1H", "24H", "7D", "1M", "6M", "1Y"];
 
-export function MarketLineChart({ data }: { data: HistoricalPoint[] }) {
+interface MarketLineChartProps {
+  data: HistoricalPoint[];
+  asset?: string;
+  currency?: string;
+}
+
+export function MarketLineChart({ data, asset = "BTC", currency = "USD" }: MarketLineChartProps) {
   const [selectedRange, setSelectedRange] = useState<ChartRange>("7D");
-  const visibleData = selectHistoryForRange(data, selectedRange);
+  const [history, setHistory] = useState<HistoricalPoint[]>(data);
+  const [status, setStatus] = useState<ApiStatus>({ state: "updating" });
+  const initialHistory = useMemo(() => data, [data]);
+  const visibleData = selectHistoryForRange(history.length ? history : initialHistory, selectedRange);
   const candles = buildCandlesFromHistory(visibleData, getCandleBucketSize(visibleData.length));
   const values = candles.flatMap((candle) => [candle.high, candle.low]);
   const min = values.length > 0 ? Math.min(...values) : 0;
@@ -33,13 +42,48 @@ export function MarketLineChart({ data }: { data: HistoricalPoint[] }) {
     return paddingTop + ((max - value) / range) * (priceHeight - paddingTop);
   }
 
+  useEffect(() => {
+    const controller = new AbortController();
+
+    async function loadHistory() {
+      setStatus((current) => ({ ...current, state: "updating" }));
+
+      try {
+        const params = new URLSearchParams({ asset, currency, range: selectedRange });
+        const response = await fetch(`/api/markets/history?${params.toString()}`, { signal: controller.signal });
+
+        if (!response.ok) {
+          throw new Error(`History request failed: ${response.status}`);
+        }
+
+        const payload = (await response.json()) as { data?: HistoricalPoint[]; status?: ApiStatus };
+        setHistory(payload.data?.length ? payload.data : initialHistory);
+        setStatus(payload.status ?? { state: "live", lastUpdated: new Date().toISOString() });
+      } catch (error) {
+        if (error instanceof DOMException && error.name === "AbortError") {
+          return;
+        }
+
+        setHistory(initialHistory);
+        setStatus({ state: "offline", lastUpdated: new Date().toISOString(), message: "Using local chart history." });
+      }
+    }
+
+    void loadHistory();
+
+    return () => controller.abort();
+  }, [asset, currency, initialHistory, selectedRange]);
+
   return (
     <Card className="h-[30rem] bg-[linear-gradient(135deg,rgba(10,22,35,0.96),rgba(5,13,18,0.92))]">
       <div className="mb-3 flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
         <div>
           <div className="flex flex-wrap items-center gap-2">
-            <h2 className="text-lg font-semibold">BTC/USDT</h2>
+            <h2 className="text-lg font-semibold">{asset}/{currency}</h2>
             <span className="rounded bg-white/10 px-2 py-0.5 text-xs text-slate-300">Candles</span>
+            <span className={status.state === "live" ? "rounded bg-emerald-400/15 px-2 py-0.5 text-xs text-emerald-300" : status.state === "updating" ? "rounded bg-amber-400/15 px-2 py-0.5 text-xs text-amber-300" : "rounded bg-rose-400/15 px-2 py-0.5 text-xs text-rose-300"}>
+              {status.state.replace("_", " ")}
+            </span>
             <span className={stats.change >= 0 ? "text-sm text-emerald-300" : "text-sm text-rose-300"}>{formatPercent(stats.changePercent)}</span>
           </div>
           <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-400">

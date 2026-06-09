@@ -1,5 +1,7 @@
 "use client";
 
+import { fallbackHistory } from "@/lib/api/fallback-data";
+import { MarketLineChart } from "@/components/charts/market-line-chart";
 import { AssetTable } from "@/components/dashboard/asset-table";
 import { GlobalSearch } from "@/components/search/global-search";
 import { Badge } from "@/components/ui/badge";
@@ -24,6 +26,8 @@ export function MarketsView() {
         </div>
         <GlobalSearch assets={assets} />
       </header>
+
+      <MarketLineChart data={fallbackHistory} asset="BTC" currency="USD" />
 
       <div className="grid gap-4 md:grid-cols-3">
         <Card>
