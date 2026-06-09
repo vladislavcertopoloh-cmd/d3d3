@@ -24,13 +24,14 @@ export const fallbackFiat: FiatCurrency[] = [
   { type: "fiat", symbol: "UAH", name: "Ukrainian Hryvnia", rateToBase: 41.2, baseCurrency: "USD", updatedAt: now }
 ];
 
-export const fallbackHistory: HistoricalPoint[] = Array.from({ length: 120 }, (_, index) => {
-  const wave = Math.sin(index / 7) * 10 + Math.sin(index / 3.5) * 4;
-  const trend = index < 74 ? index * 0.34 : 25 - (index - 74) * 0.92;
-  const pulse = Math.cos(index / 13) * 3;
+export const fallbackHistory: HistoricalPoint[] = Array.from({ length: 365 }, (_, index) => {
+  const wave = Math.sin(index / 11) * 12 + Math.sin(index / 4.5) * 4;
+  const yearlyTrend = index < 235 ? index * 0.18 : 42 - (index - 235) * 0.33;
+  const monthlyPulse = Math.cos(index / 19) * 5;
+  const breakout = index > 285 ? Math.sin((index - 285) / 8) * 14 : 0;
 
   return {
-    timestamp: new Date(Date.now() - (119 - index) * 30 * 60 * 1000).toISOString(),
-    value: 92 + wave + trend + pulse
+    timestamp: new Date(Date.now() - (364 - index) * 24 * 60 * 60 * 1000).toISOString(),
+    value: 92 + wave + yearlyTrend + monthlyPulse + breakout
   };
 });

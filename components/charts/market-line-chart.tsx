@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
-import { selectHistoryForRange } from "@/lib/utils/chart-range";
+import { getCandleBucketSize, selectHistoryForRange } from "@/lib/utils/chart-range";
 import { latestCandleStats } from "@/lib/utils/chart-stats";
 import { buildCandlesFromHistory } from "@/lib/utils/candles";
 import { formatPercent } from "@/lib/utils/format";
@@ -13,9 +13,7 @@ const ranges: ChartRange[] = ["1H", "24H", "7D", "1M", "6M", "1Y"];
 export function MarketLineChart({ data }: { data: HistoricalPoint[] }) {
   const [selectedRange, setSelectedRange] = useState<ChartRange>("7D");
   const visibleData = selectHistoryForRange(data, selectedRange);
-  const rawCandles = buildCandlesFromHistory(visibleData, 1);
-  const displayCandles = rawCandles.length > 46 ? rawCandles.slice(rawCandles.length - 46) : rawCandles;
-  const candles = displayCandles;
+  const candles = buildCandlesFromHistory(visibleData, getCandleBucketSize(visibleData.length));
   const values = candles.flatMap((candle) => [candle.high, candle.low]);
   const min = values.length > 0 ? Math.min(...values) : 0;
   const max = values.length > 0 ? Math.max(...values) : 1;

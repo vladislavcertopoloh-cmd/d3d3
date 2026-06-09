@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { selectHistoryForRange } from "@/lib/utils/chart-range";
+import { getCandleBucketSize, selectHistoryForRange } from "@/lib/utils/chart-range";
 import type { HistoricalPoint } from "@/types/market";
 
-const points: HistoricalPoint[] = Array.from({ length: 120 }, (_, index) => ({
+const points: HistoricalPoint[] = Array.from({ length: 365 }, (_, index) => ({
   timestamp: `2026-06-09T${String(index).padStart(2, "0")}:00:00.000Z`,
   value: index
 }));
@@ -14,9 +14,16 @@ describe("selectHistoryForRange", () => {
     expect(selectHistoryForRange(points, "7D")).toHaveLength(84);
   });
 
-  it("returns all points for long ranges", () => {
+  it("returns different depths for long ranges", () => {
     expect(selectHistoryForRange(points, "1M")).toHaveLength(120);
-    expect(selectHistoryForRange(points, "6M")).toHaveLength(120);
-    expect(selectHistoryForRange(points, "1Y")).toHaveLength(120);
+    expect(selectHistoryForRange(points, "6M")).toHaveLength(220);
+    expect(selectHistoryForRange(points, "1Y")).toHaveLength(365);
+  });
+
+  it("compresses dense ranges into readable candles", () => {
+    expect(getCandleBucketSize(32)).toBe(1);
+    expect(getCandleBucketSize(120)).toBe(3);
+    expect(getCandleBucketSize(220)).toBe(5);
+    expect(getCandleBucketSize(365)).toBe(8);
   });
 });
