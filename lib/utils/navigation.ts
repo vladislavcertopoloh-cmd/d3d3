@@ -14,3 +14,9 @@ export function isNavItemActive(href: string, pathname: string) {
 
   return pathname === href || pathname.startsWith(`${href}/`);
 }
+
+export function getActiveNavHref(pathname: string) {
+  return [...navigationItems]
+    .sort((left, right) => right.href.length - left.href.length)
+    .find((item) => isNavItemActive(item.href, pathname))?.href ?? "/";
+}

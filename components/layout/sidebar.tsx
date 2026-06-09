@@ -2,8 +2,9 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
 import { Activity, Bell, Calculator, Eye, LineChart, Settings, Star, Wifi } from "lucide-react";
-import { isNavItemActive, navigationItems } from "@/lib/utils/navigation";
+import { getActiveNavHref, navigationItems } from "@/lib/utils/navigation";
 import { cn } from "@/lib/utils/style";
 
 const icons = {
@@ -17,6 +18,12 @@ const icons = {
 
 export function Sidebar() {
   const pathname = usePathname();
+  const [selectedHref, setSelectedHref] = useState(() => getActiveNavHref(pathname));
+  const activeHref = selectedHref || getActiveNavHref(pathname);
+
+  useEffect(() => {
+    setSelectedHref(getActiveNavHref(pathname));
+  }, [pathname]);
 
   return (
     <aside className="hidden w-72 border-r border-white/10 bg-slate-950/55 p-5 backdrop-blur-xl lg:block">
@@ -32,15 +39,16 @@ export function Sidebar() {
       <nav className="space-y-1">
         {navigationItems.map((item) => {
           const Icon = icons[item.icon];
-          const active = isNavItemActive(item.href, pathname);
+          const active = item.href === activeHref;
 
           return (
             <Link
               key={item.href}
               href={item.href}
+              onClick={() => setSelectedHref(item.href)}
               aria-current={active ? "page" : undefined}
               className={cn(
-                "group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition",
+                "group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-100",
                 active
                   ? "bg-cyan-300 text-slate-950 shadow-[0_0_24px_rgba(88,196,221,0.18)]"
                   : "text-slate-300 hover:bg-white/10 hover:text-white"

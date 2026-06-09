@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { isNavItemActive, navigationItems } from "@/lib/utils/navigation";
+import { getActiveNavHref, isNavItemActive, navigationItems } from "@/lib/utils/navigation";
 
 describe("navigation", () => {
   it("keeps sidebar links wired to real app routes", () => {
@@ -18,5 +18,12 @@ describe("navigation", () => {
     expect(isNavItemActive("/", "/converter")).toBe(false);
     expect(isNavItemActive("/markets", "/markets/btc")).toBe(true);
     expect(isNavItemActive("/watchlist", "/watchlist")).toBe(true);
+  });
+
+  it("chooses the active sidebar item from the current path", () => {
+    expect(getActiveNavHref("/")).toBe("/");
+    expect(getActiveNavHref("/markets")).toBe("/markets");
+    expect(getActiveNavHref("/markets/btc")).toBe("/markets");
+    expect(getActiveNavHref("/unknown")).toBe("/");
   });
 });
