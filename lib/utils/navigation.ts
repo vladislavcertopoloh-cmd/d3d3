@@ -7,6 +7,8 @@ export const navigationItems = [
   { href: "/settings", label: "Settings", icon: "Settings" }
 ] as const;
 
+export type NavigationHref = (typeof navigationItems)[number]["href"];
+
 export function isNavItemActive(href: string, pathname: string) {
   if (href === "/") {
     return pathname === "/";

@@ -1,4 +1,6 @@
 import { describe, expect, it } from "vitest";
+import { existsSync } from "node:fs";
+import { join } from "node:path";
 import { getActiveNavHref, isNavItemActive, navigationItems } from "@/lib/utils/navigation";
 
 describe("navigation", () => {
@@ -25,5 +27,12 @@ describe("navigation", () => {
     expect(getActiveNavHref("/markets")).toBe("/markets");
     expect(getActiveNavHref("/markets/btc")).toBe("/markets");
     expect(getActiveNavHref("/unknown")).toBe("/");
+  });
+
+  it("points sidebar items to existing app pages", () => {
+    for (const item of navigationItems) {
+      const pagePath = item.href === "/" ? "app/page.tsx" : `app${item.href}/page.tsx`;
+      expect(existsSync(join(process.cwd(), pagePath)), `${item.label} route should exist`).toBe(true);
+    }
   });
 });
