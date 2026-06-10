@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { Card } from "@/components/ui/card";
+import { chartAssetOptions, chartCurrencyOptions } from "@/lib/utils/chart-options";
 import { getCandleBucketSize, selectHistoryForRange } from "@/lib/utils/chart-range";
 import { latestCandleStats } from "@/lib/utils/chart-stats";
 import { buildCandlesFromHistory } from "@/lib/utils/candles";
@@ -18,6 +19,8 @@ interface MarketLineChartProps {
 
 export function MarketLineChart({ data, asset = "BTC", currency = "USD" }: MarketLineChartProps) {
   const [selectedRange, setSelectedRange] = useState<ChartRange>("7D");
+  const [selectedAsset, setSelectedAsset] = useState(asset);
+  const [selectedCurrency, setSelectedCurrency] = useState(currency);
   const [history, setHistory] = useState<HistoricalPoint[]>(data);
   const [status, setStatus] = useState<ApiStatus>({ state: "updating" });
   const initialHistory = useMemo(() => data, [data]);
@@ -49,7 +52,7 @@ export function MarketLineChart({ data, asset = "BTC", currency = "USD" }: Marke
       setStatus((current) => ({ ...current, state: "updating" }));
 
       try {
-        const params = new URLSearchParams({ asset, currency, range: selectedRange });
+        const params = new URLSearchParams({ asset: selectedAsset, currency: selectedCurrency, range: selectedRange });
         const response = await fetch(`/api/markets/history?${params.toString()}`, { signal: controller.signal });
 
         if (!response.ok) {
@@ -72,14 +75,14 @@ export function MarketLineChart({ data, asset = "BTC", currency = "USD" }: Marke
     void loadHistory();
 
     return () => controller.abort();
-  }, [asset, currency, initialHistory, selectedRange]);
+  }, [initialHistory, selectedAsset, selectedCurrency, selectedRange]);
 
   return (
     <Card className="h-[30rem] bg-[linear-gradient(135deg,rgba(10,22,35,0.96),rgba(5,13,18,0.92))]">
       <div className="mb-3 flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
         <div>
           <div className="flex flex-wrap items-center gap-2">
-            <h2 className="text-lg font-semibold">{asset}/{currency}</h2>
+            <h2 className="text-lg font-semibold">{selectedAsset}/{selectedCurrency}</h2>
             <span className="rounded bg-white/10 px-2 py-0.5 text-xs text-slate-300">Candles</span>
             <span className={status.state === "live" ? "rounded bg-emerald-400/15 px-2 py-0.5 text-xs text-emerald-300" : status.state === "updating" ? "rounded bg-amber-400/15 px-2 py-0.5 text-xs text-amber-300" : "rounded bg-rose-400/15 px-2 py-0.5 text-xs text-rose-300"}>
               {status.state.replace("_", " ")}
@@ -95,17 +98,47 @@ export function MarketLineChart({ data, asset = "BTC", currency = "USD" }: Marke
             <span>C <b className="font-medium text-slate-200">{stats.close.toFixed(2)}</b></span>
           </div>
         </div>
-        <div className="flex flex-wrap justify-end gap-1">
-          {ranges.map((range) => (
-            <button
-              key={range}
-              className={range === selectedRange ? "rounded-md bg-cyan-300 px-2 py-1 text-xs font-semibold text-slate-950" : "rounded-md bg-white/10 px-2 py-1 text-xs text-slate-300 hover:bg-white/15"}
-              onClick={() => setSelectedRange(range)}
-              type="button"
+        <div className="flex flex-col gap-2">
+          <div className="flex flex-wrap justify-end gap-2">
+            <select
+              aria-label="Chart asset"
+              className="rounded-md border border-white/10 bg-slate-950/80 px-2 py-1 text-xs text-slate-100 outline-none transition hover:bg-white/10 focus:border-cyan-200"
+              value={selectedAsset}
+              onChange={(event) => {
+                setSelectedAsset(event.target.value);
+                setHistory(initialHistory);
+              }}
             >
-              {range}
-            </button>
-          ))}
+              {chartAssetOptions.map((option) => (
+                <option key={option.symbol} value={option.symbol}>{option.symbol} - {option.name}</option>
+              ))}
+            </select>
+            <select
+              aria-label="Chart quote currency"
+              className="rounded-md border border-white/10 bg-slate-950/80 px-2 py-1 text-xs text-slate-100 outline-none transition hover:bg-white/10 focus:border-cyan-200"
+              value={selectedCurrency}
+              onChange={(event) => {
+                setSelectedCurrency(event.target.value);
+                setHistory(initialHistory);
+              }}
+            >
+              {chartCurrencyOptions.map((option) => (
+                <option key={option.code} value={option.code}>{option.code} - {option.name}</option>
+              ))}
+            </select>
+          </div>
+          <div className="flex flex-wrap justify-end gap-1">
+            {ranges.map((range) => (
+              <button
+                key={range}
+                className={range === selectedRange ? "rounded-md bg-cyan-300 px-2 py-1 text-xs font-semibold text-slate-950" : "rounded-md bg-white/10 px-2 py-1 text-xs text-slate-300 hover:bg-white/15"}
+                onClick={() => setSelectedRange(range)}
+                type="button"
+              >
+                {range}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
       <div className="relative h-[82%] overflow-hidden rounded-lg border border-white/10 bg-[#08131f]">

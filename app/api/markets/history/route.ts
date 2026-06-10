@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getHistory } from "@/lib/api/market-data";
+import { isSupportedChartAsset, isSupportedChartCurrency } from "@/lib/utils/chart-options";
 import type { ChartRange } from "@/types/market";
 
 const ranges = new Set(["1H", "24H", "7D", "1M", "6M", "1Y"]);
@@ -12,6 +13,10 @@ export async function GET(request: Request) {
 
   if (!ranges.has(range)) {
     return NextResponse.json({ error: "Unsupported range" }, { status: 400 });
+  }
+
+  if (!isSupportedChartAsset(asset) || !isSupportedChartCurrency(currency)) {
+    return NextResponse.json({ error: "Unsupported chart pair" }, { status: 400 });
   }
 
   return NextResponse.json(await getHistory(asset, currency, range as ChartRange));
